@@ -1,0 +1,19 @@
+{
+  "name": "jedenweb/qr-payment",
+  "description": "QR payment generator",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^7.1",
+    "globalcitizen/php-iban": "^2.6",
+    "endroid/qr-code": "^3.2"
+  },
+  "require-dev": {
+    "nette/tester": "^2.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "JedenWeb\\QRPayment\\": "src"
+    }
+  }
+}
