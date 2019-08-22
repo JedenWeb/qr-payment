@@ -5,8 +5,8 @@
   "license": "MIT",
   "require": {
     "php": "^7.1",
-    "globalcitizen/php-iban": "^2.6",
-    "endroid/qr-code": "^3.2"
+    "globalcitizen/php-iban": "^2.7",
+    "endroid/qr-code": "^3.6"
   },
   "require-dev": {
     "nette/tester": "^2.0"

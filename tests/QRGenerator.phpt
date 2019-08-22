@@ -11,7 +11,6 @@
 namespace Tests\JedenWeb\QRPayment;
 
 use JedenWeb\QRPayment\QRGenerator;
-use JedenWeb\QRPayment\QRPayment;
 use Tester;
 use Tester\Assert;
 

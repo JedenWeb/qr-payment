@@ -25,7 +25,7 @@ class QRGenerator
 		$code->setWriterByName('png');
 		$code->setMargin(10);
 		$code->setEncoding('UTF-8');
-		$code->setErrorCorrectionLevel(ErrorCorrectionLevel::MEDIUM);
+		$code->setErrorCorrectionLevel(new ErrorCorrectionLevel(ErrorCorrectionLevel::MEDIUM));
 		$code->setLabel('QR platba', 12, null, LabelAlignment::LEFT);
 
 		return $code->writeString();

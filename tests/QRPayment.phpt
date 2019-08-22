@@ -13,7 +13,6 @@ namespace Tests\JedenWeb\QRPayment;
 use JedenWeb\QRPayment\AllowedLengthExceeded;
 use JedenWeb\QRPayment\DisallowedCharacter;
 use JedenWeb\QRPayment\InvalidFormat;
-use JedenWeb\QRPayment\InvalidIban;
 use JedenWeb\QRPayment\QRPayment;
 use Tester;
 use Tester\Assert;
