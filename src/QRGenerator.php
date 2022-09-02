@@ -2,13 +2,6 @@
 
 namespace JedenWeb\QRPayment;
 
-use Endroid\QrCode\ErrorCorrectionLevel;
-use Endroid\QrCode\LabelAlignment;
-use Endroid\QrCode\QrCode;
-
-/**
- * @author Pavel Jurásek
- */
 class QRGenerator
 {
 
@@ -19,16 +12,19 @@ class QRGenerator
 
 	public function createFromString(string $content): string
 	{
-		$code = new QrCode($content);
-		$code->setSize(300);
+		$builder = \Endroid\QrCode\Builder\Builder::create()
+			->data($content)
+			->writer(new \Endroid\QrCode\Writer\PngWriter())
+			->size(300)
+			->margin(10)
+			->encoding(new \Endroid\QrCode\Encoding\Encoding('UTF-8'))
+			->errorCorrectionLevel(new \Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelMedium())
+			->labelText('QR platba')
+			->labelFont(new \Endroid\QrCode\Label\Font\OpenSans(12))
+			->labelAlignment(new \Endroid\QrCode\Label\Alignment\LabelAlignmentLeft())
+		;
 
-		$code->setWriterByName('png');
-		$code->setMargin(10);
-		$code->setEncoding('UTF-8');
-		$code->setErrorCorrectionLevel(new ErrorCorrectionLevel(ErrorCorrectionLevel::MEDIUM));
-		$code->setLabel('QR platba', 12, null, LabelAlignment::LEFT);
-
-		return $code->writeString();
+		return $builder->build()->getString();
 	}
 
 }

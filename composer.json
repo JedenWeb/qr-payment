@@ -4,12 +4,12 @@
   "type": "library",
   "license": "MIT",
   "require": {
-    "php": "^7.1",
-    "globalcitizen/php-iban": "^2.7",
-    "endroid/qr-code": "^3.6"
+    "php": "^8.0",
+    "globalcitizen/php-iban": "^4.1",
+    "endroid/qr-code": "^4.5"
   },
   "require-dev": {
-    "nette/tester": "^2.0"
+    "nette/tester": "^2.4"
   },
   "autoload": {
     "psr-4": {
