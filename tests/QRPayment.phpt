@@ -4,25 +4,14 @@
  * Test: JedenWeb\QRPayment\QRPayment.
  *
  * @testCase Tests\JedenWeb\QRPayment\QRPaymentTest
- * @author Pavel Jurásek
  * @package JedenWeb\QRPayment
  */
 
 namespace Tests\JedenWeb\QRPayment;
 
-use JedenWeb\QRPayment\AllowedLengthExceeded;
-use JedenWeb\QRPayment\DisallowedCharacter;
-use JedenWeb\QRPayment\InvalidFormat;
-use JedenWeb\QRPayment\QRPayment;
-use Tester;
-use Tester\Assert;
-
 require_once __DIR__ . '/bootstrap.php';
 
-/**
- * @author Pavel Jurásek
- */
-class QRPaymentTest extends Tester\TestCase
+class QRPaymentTest extends \Tester\TestCase
 {
 
 	public function setUp()
@@ -32,34 +21,38 @@ class QRPaymentTest extends Tester\TestCase
 
 	public function testBasic(): void
 	{
-		$payment = new QRPayment('CZ2806000000000168540115');
+		$payment = new \JedenWeb\QRPayment\QRPayment('CZ2806000000000168540115');
 		$payment->setAmount('450')
 			->setCurrency('CZK')
 			->setMessage('PLATBA ZA ZBOZI');
 
-		Assert::same('e8f0bf9e', $payment->getChecksum());
-		Assert::same('SPD*1.0*ACC:CZ2806000000000168540115*AM:450.00*CC:CZK*MSG:PLATBA ZA ZBOZI*CRC32:e8f0bf9e', $payment->toString());
+		\Tester\Assert::same('e8f0bf9e', $payment->getChecksum());
+		\Tester\Assert::same('SPD*1.0*ACC:CZ2806000000000168540115*AM:450.00*CC:CZK*MSG:PLATBA ZA ZBOZI*CRC32:e8f0bf9e', $payment->toString());
 	}
 
 	public function testExceptions(): void
 	{
-		Assert::exception(function () {
-			$payment = new QRPayment('CZ2806000000000168540111');
-		}, InvalidFormat::class);
+		\Tester\Assert::exception(static function (): void {
+			$payment = new \JedenWeb\QRPayment\QRPayment('CZ2806000000000168540111');
+		}, \JedenWeb\QRPayment\Exception\InvalidFormat::class);
 
-		$payment = new QRPayment('CZ2806000000000168540115');
+		$payment = new \JedenWeb\QRPayment\QRPayment('CZ2806000000000168540115');
 
-		Assert::exception(function () use ($payment) {
+		\Tester\Assert::exception(static function () use ($payment): void {
 			$payment->setAmount('asd');
-		}, DisallowedCharacter::class);
+		}, \JedenWeb\QRPayment\Exception\DisallowedCharacter::class);
 
-		Assert::exception(function () use ($payment) {
+		\Tester\Assert::exception(static function () use ($payment): void {
+			$payment->setMessage('💩');
+		}, \JedenWeb\QRPayment\Exception\DisallowedCharacter::class);
+
+		\Tester\Assert::exception(static function () use ($payment): void {
 			$payment->setAmount('14124151241213');
-		}, AllowedLengthExceeded::class);
+		}, \JedenWeb\QRPayment\Exception\AllowedLengthExceeded::class);
 
-		Assert::exception(function () use ($payment) {
+		\Tester\Assert::exception(static function () use ($payment): void {
 			$payment->setCurrency('ASDZ');
-		}, InvalidFormat::class);
+		}, \JedenWeb\QRPayment\Exception\InvalidFormat::class);
 	}
 
 }

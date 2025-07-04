@@ -5,26 +5,36 @@ namespace JedenWeb\QRPayment;
 class QRGenerator
 {
 
-	public function create(QRPayment $payment): string
+	/**
+	 * @throws \Endroid\QrCode\Exception\ValidationException
+	 */
+	public function create(\JedenWeb\QRPayment\QRPayment $payment, ?\Endroid\QrCode\Builder\Builder $builder = null): string
 	{
-		return $this->createFromString($payment->toString());
+		return $this->createFromString($payment->toString(), $builder);
 	}
 
-	public function createFromString(string $content): string
+	/**
+	 * @throws \Endroid\QrCode\Exception\ValidationException
+	 */
+	public function createFromString(string $data, ?\Endroid\QrCode\Builder\Builder $builder = null): string
 	{
-		$builder = \Endroid\QrCode\Builder\Builder::create()
-			->data($content)
-			->writer(new \Endroid\QrCode\Writer\PngWriter())
-			->size(300)
-			->margin(10)
-			->encoding(new \Endroid\QrCode\Encoding\Encoding('UTF-8'))
-			->errorCorrectionLevel(new \Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelMedium())
-			->labelText('QR platba')
-			->labelFont(new \Endroid\QrCode\Label\Font\OpenSans(12))
-			->labelAlignment(new \Endroid\QrCode\Label\Alignment\LabelAlignmentLeft())
-		;
+		$builder = $builder ?? $this->defaultBuilder();
 
-		return $builder->build()->getString();
+		return $builder
+			->build(data: $data)
+			->getString()
+		;
+	}
+
+	protected function defaultBuilder(): \Endroid\QrCode\Builder\Builder
+	{
+		return new \Endroid\QrCode\Builder\Builder(
+			new \Endroid\QrCode\Writer\PngWriter(),
+			errorCorrectionLevel: \Endroid\QrCode\ErrorCorrectionLevel::Medium,
+			size: 300,
+			margin: 10,
+			backgroundColor: new \Endroid\QrCode\Color\Color(255, 255, 255, 127),
+		);
 	}
 
 }

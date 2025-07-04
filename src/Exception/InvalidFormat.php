@@ -1,10 +1,7 @@
 <?php declare(strict_types=1);
 
-namespace JedenWeb\QRPayment;
+namespace JedenWeb\QRPayment\Exception;
 
-/**
- * @author Pavel Jurásek
- */
 class InvalidFormat extends QRPaymentException
 {
 

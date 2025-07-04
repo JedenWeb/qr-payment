@@ -2,38 +2,37 @@
 
 namespace JedenWeb\QRPayment;
 
-/**
- * @author Pavel Jurásek
- */
 class QRPayment
 {
 
-	/** @var array */
-	private $fields = [];
+	/** @var array<string, scalar> */
+	private array $fields = [];
 
-	/** @var string */
-	private $checksum;
+	private ?string $checksum = null;
 
 	public function __construct(string $iban)
 	{
-		if (!verify_iban($iban)) {
-			throw new InvalidFormat(sprintf('IBAN %s is not valid.', $iban));
+		// we are permissive about spaces in IBAN, so we can accept both "CZ65 0800 0000 1920 0014 5399" and "CZ6508000000192000145399"
+		$iban = \str_replace(' ', '', $iban);
+
+		if ( ! \verify_iban($iban)) {
+			throw new Exception\InvalidFormat(sprintf('IBAN %s is not valid.', $iban));
 		}
 
 		$this->fields['ACC'] = $iban;
 		$this->calculateChecksum();
 	}
 
-	public function setAmount(string $amount): self
+	public function setAmount(int|string $amount): self
 	{
-		if (!is_numeric($amount)) {
-			throw new DisallowedCharacter('Amount doesn\'t seem to be a number.');
+		if ( ! \is_numeric($amount)) {
+			throw new Exception\DisallowedCharacter('Amount must a number or numeric string.');
 		}
 
-		$amount = number_format((float) $amount, 2, '.', '');
+		$amount = \number_format((float) $amount, 2, '.', '');
 
 		if (strlen($amount) > 10) {
-			throw new AllowedLengthExceeded('Amount can be at most 10 characters long.');
+			throw new Exception\AllowedLengthExceeded('Amount can be at most 10 characters long.');
 		}
 
 		$this->fields['AM'] = $amount;
@@ -45,7 +44,7 @@ class QRPayment
 	public function setCurrency(string $currency): self
 	{
 		if (!preg_match('~^[A-Z]{3}\z~', $currency)) {
-			throw new InvalidFormat(sprintf('Currency code %s is not valid.', $currency));
+			throw new Exception\InvalidFormat(sprintf('Currency code %s is not valid.', $currency));
 		}
 
 		$this->fields['CC'] = $currency;
@@ -56,8 +55,8 @@ class QRPayment
 
 	public function setReceiverPaymentIdentificator(string $identificator): self
 	{
-		if (strlen($identificator) > 16) {
-			throw new AllowedLengthExceeded('Receiver payment identificator can be at most 16 characters long.');
+		if (\strlen($identificator) > 16) {
+			throw new Exception\AllowedLengthExceeded('Receiver payment identificator can be at most 16 characters long.');
 		}
 
 		$this->fields['RF'] = $identificator;
@@ -68,10 +67,12 @@ class QRPayment
 
 	public function setReceiverName(string $name): self
 	{
-		if (strlen($name) > 35) {
-			throw new AllowedLengthExceeded('Receiver name can be at most 35 characters long.');
-		} elseif (!preg_match('~^[0-9A-Z \$%\*\+\-\.\/:]*\z~', $name)) {
-			throw new DisallowedCharacter('Field can contain only these characters: 0-9, A-Z, (space), $, %, *, +, -, ., /, :');
+		if (\strlen($name) > 35) {
+			throw new Exception\AllowedLengthExceeded('Receiver name can be at most 35 characters long.');
+		}
+
+		if ( ! \preg_match('~^[0-9A-Z $%*+./:-]*\z~', $name)) {
+			throw new Exception\DisallowedCharacter('Field can contain only these characters: 0-9, A-Z, (space), $, %, *, +, -, ., /, :');
 		}
 
 		$this->fields['RN'] = $name;
@@ -90,10 +91,12 @@ class QRPayment
 
 	public function setPaymentType(string $type): self
 	{
-		if (strlen($type) > 3) {
-			throw new AllowedLengthExceeded('Payment type can be at most 3 characters long.');
-		} elseif (!preg_match('~^[0-9A-Z \$%\*\+\-\.\/:]*\z~', $type)) {
-			throw new DisallowedCharacter('Field can contain only these characters: 0-9, A-Z, (space), $, %, *, +, -, ., /, :');
+		if (\strlen($type) > 3) {
+			throw new Exception\AllowedLengthExceeded('Payment type can be at most 3 characters long.');
+		}
+
+		if ( ! \preg_match('~^[0-9A-Z $%*+./:-]*\z~', $type)) {
+			throw new Exception\DisallowedCharacter('Field can contain only these characters: 0-9, A-Z, (space), $, %, *, +, -, ., /, :');
 		}
 
 		$this->fields['PT'] = $type;
@@ -104,10 +107,12 @@ class QRPayment
 
 	public function setMessage(string $message): self
 	{
-		if (strlen($message) > 60) {
-			throw new AllowedLengthExceeded('Message can be at most 60 characters long.');
-		} elseif (!preg_match('~^[0-9A-Z \$%\*\+\-\.\/\:]*\z~', $message)) {
-			throw new DisallowedCharacter('Field can contain only these characters: 0-9, A-Z, (space), $, %, *, +, -, ., /, :');
+		if (\strlen($message) > 60) {
+			throw new Exception\AllowedLengthExceeded('Message can be at most 60 characters long.');
+		}
+
+		if ( ! \preg_match('~^[0-9A-Z $%*+./:-]*\z~', $message)) {
+			throw new Exception\DisallowedCharacter('Field can contain only these characters: 0-9, A-Z, (space), $, %, *, +, -, ., /, :');
 		}
 
 		$this->fields['MSG'] = $message;
@@ -119,11 +124,11 @@ class QRPayment
 	public function setNotification(string $channel, string $address): self
 	{
 		if ($channel !== 'P' && $channel !== 'E') {
-			throw new DisallowedCharacter('Notification can be either P(hone) or E(-mail).');
+			throw new Exception\DisallowedCharacter('Notification can be either P(hone) or E(-mail).');
 		}
 
-		if ($channel === 'P' && !preg_match('~^(\+|00)[0-9]{2,3}[0,9]{0,12}\z~', $address)) {
-			throw new InvalidFormat('Phone number format is not valid.');
+		if ($channel === 'P' && ! \preg_match('~^(\+|00)[0-9]{2,3}[0,9]{0,12}\z~', $address)) {
+			throw new Exception\InvalidFormat('Phone number format is not valid.');
 		}
 
 		$this->fields['NT'] = $channel;
@@ -136,7 +141,7 @@ class QRPayment
 	public function setRetry(int $days): self
 	{
 		if ($days < 0 || $days > 30) {
-			throw new DisallowedCharacter('Number of retries is out of range. Min is 0, max is 30.');
+			throw new Exception\DisallowedCharacter('Number of retries is out of range. Min is 0, max is 30.');
 		}
 
 		$this->fields['X-PER'] = (string) $days;
@@ -178,7 +183,7 @@ class QRPayment
 	public function setIssuerId(string $id): self
 	{
 		if (strlen($id) > 20) {
-			throw new AllowedLengthExceeded('Issuer ID can be at most 20 characters long.');
+			throw new Exception\AllowedLengthExceeded('Issuer ID can be at most 20 characters long.');
 		}
 
 		$this->fields['X-ID'] = $id;
@@ -190,7 +195,7 @@ class QRPayment
 	public function setUrl(string $url): self
 	{
 		if (strlen($url) > 140) {
-			throw new AllowedLengthExceeded('URL can be at most 140 characters long.');
+			throw new Exception\AllowedLengthExceeded('URL can be at most 140 characters long.');
 		}
 
 		$this->fields['X-URL'] = $url;
@@ -199,12 +204,14 @@ class QRPayment
 		return $this;
 	}
 
-	private function validateSymbol(string $symbol, string $name): void
+	private function validateSymbol(int|string $symbol, string $name): void
 	{
-		if (!is_numeric($symbol)) {
-			throw new DisallowedCharacter(sprintf('%s symbol must be a number.', $name));
-		} elseif (strlen($symbol) > 10) {
-			throw new AllowedLengthExceeded(sprintf('%s symbol can be at most 10 characters long.', $name));
+		if ( ! \is_numeric($symbol)) {
+			throw new Exception\DisallowedCharacter(sprintf('%s symbol must be a number or numeric string.', $name));
+		}
+
+		if (\strlen((string) $symbol) > 10) {
+			throw new Exception\AllowedLengthExceeded(sprintf('%s symbol can be at most 10 characters long.', $name));
 		}
 	}
 
@@ -213,10 +220,10 @@ class QRPayment
 		if (isset($this->fields['CRC32'])) {
 			unset($this->fields['CRC32']);
 		}
-		ksort($this->fields);
+		\ksort($this->fields);
 
 //		var_dump($this->convertToString($this->fields));
-		$this->checksum = dechex(crc32($this->convertToString($this->fields)));
+		$this->checksum = \dechex(\crc32($this->convertToString($this->fields)));
 		$this->fields['CRC32'] = $this->checksum;
 	}
 
@@ -226,9 +233,13 @@ class QRPayment
 			$this->calculateChecksum();
 		}
 
+		\assert(\is_string($this->checksum));
 		return $this->checksum;
 	}
 
+	/**
+	 * @param  array<string, scalar> $fields
+	 */
 	private function convertToString(array $fields): string
 	{
 		$str = 'SPD*1.0';
